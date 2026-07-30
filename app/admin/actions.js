@@ -4,12 +4,45 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
+const ALLOWED_TABLES = new Set([
+  'projects',
+  'skills',
+  'experiences',
+  'education',
+  'certifications',
+  'messages',
+])
+
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
+  .split(',')
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean)
+
 export async function signIn(_prev, formData) {
   const supabase = await createClient()
-  const email = String(formData.get('email') || '').trim()
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase()
   const password = String(formData.get('password') || '')
+  if (!email || !password) {
+    return {
+      error: "Email and password are required.",
+    }
+  }
+
+  if (password.length < 8) {
+    return {
+      error: "Invalid email or password.",
+    }
+  }
   const { error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) return { error: error.message }
+  if (error) {
+    logServerError('AUTH_LOGIN', error)
+
+    return {
+      error: "Invalid email or password.",
+    }
+  }
   redirect('/admin')
 }
 
@@ -35,6 +68,14 @@ async function requireAuth() {
     redirect('/admin/login')
   }
 
+  if (
+    ADMIN_EMAILS.length > 0 &&
+    !ADMIN_EMAILS.includes((user.email || '').toLowerCase())
+  ) {
+    await supabase.auth.signOut()
+    redirect('/admin/login?error=unauthorized')
+  }
+
   return { supabase, user }
 }
 
@@ -46,7 +87,15 @@ function toNumOrNull(v) {
 
 function toArr(v) {
   if (!v) return []
-  return String(v).split(',').map((s) => s.trim()).filter(Boolean)
+
+  return [
+    ...new Set(
+      String(v)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    ),
+  ]
 }
 
 function cleanPayload(obj) {
@@ -58,22 +107,55 @@ function cleanPayload(obj) {
   return out
 }
 
+function assertAllowedTable(table) {
+  if (!ALLOWED_TABLES.has(table)) {
+    throw new Error(`Invalid table: ${table}`)
+  }
+}
+
+function logServerError(context, error) {
+  if (process.env.NODE_ENV === 'development') {
+    console.error(`[${context}]`, error)
+  }
+}
+
 export async function upsertRow(table, payload, revalidate) {
+
+  assertAllowedTable(table)
   const { supabase } = await requireAuth()
   const now = new Date().toISOString()
   const row = { ...cleanPayload(payload), updated_at: now }
   if (!row.id) delete row.id
   const { error } = await supabase.from(table).upsert(row)
-  if (error) return { error: error.message }
+  if (error) {
+    logServerError(`UPSERT:${table}`, error)
+
+    return {
+      error: 'Failed to save data.',
+    }
+  }
   if (revalidate) revalidatePath(revalidate)
   revalidatePath('/', 'layout')
   return { success: true }
 }
 
 export async function deleteRow(table, id, revalidate) {
+  assertAllowedTable(table)
+
+  if (!id) {
+    return {
+      error: 'Invalid request.',
+    }
+  }
   const { supabase } = await requireAuth()
   const { error } = await supabase.from(table).delete().eq('id', id)
-  if (error) return { error: error.message }
+  if (error) {
+    logServerError(`DELETE:${table}`, error)
+
+    return {
+      error: 'Failed to delete data.',
+    }
+  }
   if (revalidate) revalidatePath(revalidate)
   revalidatePath('/', 'layout')
   return { success: true }
@@ -159,7 +241,9 @@ export async function saveProfile(_prev, formData) {
     tagline: formData.get('tagline'),
     bio: formData.get('bio'),
     location: formData.get('location'),
-    email: formData.get('email'),
+    email: String(formData.get('email') || '')
+      .trim()
+      .toLowerCase(),
     avatar_url: formData.get('avatar_url'),
     resume_url: formData.get('resume_url'),
     socials,
@@ -172,7 +256,11 @@ export async function saveProfile(_prev, formData) {
     .eq('user_id', user.id)
 
   if (error) {
-    return { error: error.message }
+    logServerError('PROFILE_UPDATE', error)
+
+    return {
+      error: 'Failed to update profile.',
+    }
   }
 
   revalidatePath('/admin/profile')
@@ -186,11 +274,26 @@ export async function deleteMessage(formData) {
 }
 
 export async function toggleMessageRead(formData) {
-  const { supabase } = await requireAuth()
+
   const id = formData.get('id')
+  if (!id) {
+    return {
+      error: 'Invalid request.',
+    }
+  }
+  const { supabase } = await requireAuth()
   const is_read = formData.get('is_read') === 'true'
+
   const { error } = await supabase.from('messages').update({ is_read }).eq('id', id)
-  if (error) return { error: error.message }
+  if (error) {
+    logServerError('MESSAGE_READ', error)
+
+    return {
+      error: 'Failed to update message.',
+    }
+  }
   revalidatePath('/admin/messages')
   return { success: true }
 }
+
+
