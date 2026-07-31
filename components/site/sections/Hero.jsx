@@ -31,8 +31,8 @@ export function Hero({ profile }) {
             </div>
 
             <h1 className="mt-5 text-4xl md:text-6xl font-semibold tracking-tight leading-[1.05] text-balance">
-              Hi, I&apos;m {profile.full_name.split(' ')[0]}.{' '}
-              <span className="text-primary">{profile.headline}.</span>
+              Hi, I&apos;m {profile.full_name.split(' ')[0]}. {}
+              <span className="text-primary ">{profile.headline}</span>
             </h1>
 
             <p className="mt-5 text-lg text-muted-foreground max-w-xl leading-relaxed">
@@ -40,7 +40,8 @@ export function Hero({ profile }) {
             </p>
 
             <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4" /> {profile.location}
+              <MapPin className="h-4 w-4" />
+              {profile.location}
             </div>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -50,10 +51,12 @@ export function Hero({ profile }) {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="rounded-full">
-                <a href={profile.resume_url} download>
-                  <Download className="mr-1 h-4 w-4" /> Download Resume
+                <a href={profile.resume} download>
+                  <Download className="mr-1 h-4 w-4" />
+                  Download Resume
                 </a>
               </Button>
+
               <Button asChild size="lg" variant="ghost" className="rounded-full">
                 <Link href="/contact">
                   <Mail className="mr-1 h-4 w-4" /> Contact Me

@@ -36,14 +36,14 @@ async function ContactPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Linkedin className="h-5 w-5" /></div>
             <div>
               <div className="text-xs text-muted-foreground">LinkedIn</div>
-              <div className="font-medium">linkedin.com/in/achmadhasanudin</div>
+              <div className="font-medium">{profile.socials.linkedin}</div>
             </div>
           </a>
           <a href={profile.socials.github} target="_blank" rel="noopener" className="flex items-center gap-3 rounded-2xl border border-border bg-card p-5 hover:shadow-card transition-shadow">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Github className="h-5 w-5" /></div>
             <div>
               <div className="text-xs text-muted-foreground">GitHub</div>
-              <div className="font-medium">github.com/achmadhasanudin</div>
+              <div className="font-medium">{profile.socials.github}</div>
             </div>
           </a>
         </div>

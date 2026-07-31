@@ -1,11 +1,18 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { UploadCloud, Loader2, X, FileText, ImageIcon } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+
+const IMAGE_MAX_SIZE = 5 * 1024 * 1024 // 5 MB
+const FILE_MAX_SIZE = 10 * 1024 * 1024 // 10 MB
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
+const ALLOWED_FILE_TYPES = ['application/pdf']
 
 /**
  * Extract the storage object path from a Supabase public URL.
@@ -23,7 +30,10 @@ function extractStoragePath(url, bucket) {
  * Client-side resize + re-encode for images. Skips if the file isn't an image
  * or if optimization is disabled. Returns a File (JPEG or WebP) or the original.
  */
-async function optimizeImage(file, { maxWidth = 1600, maxHeight = 1600, quality = 0.85, mime = 'image/jpeg' } = {}) {
+async function optimizeImage(
+  file,
+  { maxWidth = 1600, maxHeight = 1600, quality = 0.85, mime = 'image/jpeg' } = {}
+) {
   if (!file || !file.type || !file.type.startsWith('image/')) return file
   if (file.type === 'image/gif' || file.type === 'image/svg+xml') return file
 
@@ -99,43 +109,74 @@ export function FileUpload({
     }
   }
 
-  const upload = useCallback(async (rawFile) => {
+  const upload = async (rawFile) => {
     if (!rawFile) return
+
+    const allowedTypes = kind === 'image' ? ALLOWED_IMAGE_TYPES : ALLOWED_FILE_TYPES
+
+    if (!allowedTypes.includes(rawFile.type)) {
+      toast.error(
+        kind === 'image'
+          ? 'Only JPG, PNG, and WebP images are allowed.'
+          : 'Only PDF files are allowed.'
+      )
+      return
+    }
+
+    const maxSize = kind === 'image' ? IMAGE_MAX_SIZE : FILE_MAX_SIZE
+
+    if (rawFile.size > maxSize) {
+      toast.error(
+        kind === 'image' ? 'Image size must not exceed 5 MB.' : 'File size must not exceed 10 MB.'
+      )
+      return
+    }
+
     setBusy(true)
     const previousUrl = url
+
     try {
       // 1) Optimize (images only)
-      const file = kind === 'image'
-        ? await optimizeImage(rawFile, { maxWidth, maxHeight, quality })
-        : rawFile
+      const file =
+        kind === 'image'
+          ? await optimizeImage(rawFile, {
+              maxWidth,
+              maxHeight,
+              quality,
+            })
+          : rawFile
 
       // 2) Upload new file
       const ext = (file.name.split('.').pop() || 'bin').toLowerCase()
       const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+
       const { error } = await supabase.storage.from(bucket).upload(path, file, {
-        cacheControl: '3600',
+        cacheControl: '31536000',
         upsert: false,
         contentType: file.type || undefined,
       })
+
       if (error) throw error
 
       const { data } = supabase.storage.from(bucket).getPublicUrl(path)
+
       setUrl(data.publicUrl)
 
-      // 3) Delete previous file (best-effort, only if it lived in the same bucket)
       if (previousUrl) {
         await deletePrevious(previousUrl)
       }
 
       const sizeKB = Math.round(file.size / 1024)
-      toast.success(kind === 'image' ? `Uploaded (optimized, ${sizeKB} KB)` : `Uploaded (${sizeKB} KB)`)
+
+      toast.success(
+        kind === 'image' ? `Uploaded (optimized, ${sizeKB} KB)` : `Uploaded (${sizeKB} KB)`
+      )
     } catch (e) {
       toast.error(e.message || 'Upload failed. Make sure the bucket exists and is public.')
     } finally {
       setBusy(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bucket, kind, maxWidth, maxHeight, quality, url])
+  }
 
   function onDrop(e) {
     e.preventDefault()
@@ -151,7 +192,10 @@ export function FileUpload({
       {label && <div className="text-sm font-medium">{label}</div>}
       <input type="hidden" name={name} value={url} />
       <div
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setDragOver(true)
+        }}
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
@@ -186,13 +230,18 @@ export function FileUpload({
           </div>
         ) : (
           <>
-            {kind === 'image' ? <ImageIcon className="h-6 w-6 text-muted-foreground" /> : <UploadCloud className="h-6 w-6 text-muted-foreground" />}
+            {kind === 'image' ? (
+              <ImageIcon className="h-6 w-6 text-muted-foreground" />
+            ) : (
+              <UploadCloud className="h-6 w-6 text-muted-foreground" />
+            )}
             <div className="text-sm">
               <span className="font-medium text-primary">Click to upload</span>{' '}
               <span className="text-muted-foreground">or drag &amp; drop</span>
             </div>
             <div className="text-xs text-muted-foreground">
-              Bucket: {bucket}{kind === 'image' ? ` · max ${maxWidth}×${maxHeight}` : ''}
+              Bucket: {bucket}
+              {kind === 'image' ? ` · max ${maxWidth}×${maxHeight}` : ''}
             </div>
           </>
         )}

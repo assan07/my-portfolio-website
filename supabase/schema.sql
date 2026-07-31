@@ -280,7 +280,7 @@ end $$;
 INSERT INTO storage.buckets (id, name, public)
 VALUES
 ('avatars', 'avatars', true),
-('resumes', 'resumes', false),
+('resumes', 'resumes', true),
 ('profile-images', 'profile-images', true),
 ('project-images', 'project-images', true),
 ('certificate-images', 'certificate-images', true)

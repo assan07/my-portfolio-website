@@ -1,0 +1,331 @@
+```
+└── 📁data
+    ├── certifications.js
+export const certifications = [
+  {
+    id: 'cert-1',
+    name: 'AWS Certified Cloud Practitioner',
+    issuer: 'Amazon Web Services',
+    issued_date: '2024-03',
+    credential_url: 'https://aws.amazon.com/certification/',
+  },
+  {
+    id: 'cert-2',
+    name: 'Meta Front-End Developer Professional',
+    issuer: 'Meta / Coursera',
+    issued_date: '2023-09',
+    credential_url: 'https://coursera.org/',
+  },
+  {
+    id: 'cert-3',
+    name: 'Google Associate Cloud Engineer',
+    issuer: 'Google Cloud',
+    issued_date: '2023-02',
+    credential_url: 'https://cloud.google.com/certification',
+  },
+  {
+    id: 'cert-4',
+    name: 'Certified Kubernetes Application Developer',
+    issuer: 'CNCF / Linux Foundation',
+    issued_date: '2022-11',
+    credential_url: 'https://www.cncf.io/certification/ckad/',
+  },
+]
+
+    ├── education.js
+    export const education = [
+  {
+    id: 'edu-1',
+    degree: 'Bachelor of Computer Science',
+    school: 'Universitas Indonesia',
+    location: 'Depok, Indonesia',
+    start_date: '2016-09',
+    end_date: '2020-08',
+    description:
+      'Focused on software engineering, database systems, and human-computer interaction. Graduated with honors.',
+  },
+  {
+    id: 'edu-2',
+    degree: 'High School Diploma — Science',
+    school: 'SMA Negeri 1',
+    location: 'Indonesia',
+    start_date: '2013-07',
+    end_date: '2016-06',
+    description: 'Natural sciences track with strong emphasis on mathematics and physics.',
+  },
+]
+
+    ├── experience.js
+    export const experiences = [
+  {
+    id: 'exp-1',
+    role: 'Full-Stack Developer',
+    company: 'PT Digital Nusantara',
+    location: 'Jakarta, Indonesia',
+    start_date: '2023-01',
+    end_date: null,
+    description:
+      'Lead the development of internal SaaS tools and customer-facing dashboards using Next.js, TypeScript, and PostgreSQL. Mentor junior developers and drive engineering best practices.',
+    highlights: [
+      'Shipped 10+ production features with 99.9% uptime',
+      'Reduced API latency by 45% through query optimization and caching',
+      'Introduced a design system used across 4 internal products',
+    ],
+  },
+  {
+    id: 'exp-2',
+    role: 'Web Developer',
+    company: 'CV Kreatif Media',
+    location: 'Bandung, Indonesia',
+    start_date: '2021-06',
+    end_date: '2022-12',
+    description:
+      'Built responsive marketing websites and e-commerce storefronts for local businesses using React, Laravel, and MySQL.',
+    highlights: [
+      'Delivered 25+ client websites on schedule',
+      'Integrated payment gateways (Midtrans, Xendit) end-to-end',
+    ],
+  },
+  {
+    id: 'exp-3',
+    role: 'Freelance Developer',
+    company: 'Independent',
+    location: 'Remote',
+    start_date: '2020-01',
+    end_date: '2021-05',
+    description:
+      'Worked with international clients on mobile apps and REST APIs. Focused on Flutter, Node.js, and Firebase.',
+    highlights: [
+      'Launched 3 mobile apps on Play Store',
+      'Built REST APIs consumed by 20k+ monthly users',
+    ],
+  },
+]
+
+    ├── index.js
+    // Data access layer. Tries Supabase first (if tables exist), falls back to seed data.
+import { profile as seedProfile } from './profile'
+import { techStack as seedTechStack } from './skills'
+import { experiences as seedExperiences } from './experience'
+import { education as seedEducation } from './education'
+import { certifications as seedCertifications } from './certifications'
+import { projects as seedProjects } from './projects'
+
+async function trySupabase(fn) {
+  try {
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = await createClient()
+    return await fn(supabase)
+  } catch {
+    return null
+  }
+}
+
+export async function getProfile() {
+  const remote = await trySupabase(async (supabase) => {
+    const { data, error } = await supabase.from('profiles').select('*').limit(1).maybeSingle()
+    if (error || !data) return null
+    return data
+  })
+  return remote || seedProfile
+}
+
+export async function getTechStack() {
+  const remote = await trySupabase(async (supabase) => {
+    const { data, error } = await supabase.from('skills').select('*').order('category')
+    if (error || !data || data.length === 0) return null
+    const grouped = {}
+    for (const row of data) {
+      grouped[row.category] = grouped[row.category] || { category: row.category, items: [] }
+      grouped[row.category].items.push({
+        name: row.name,
+        slug: row.slug,
+        color: row.color,
+        level: row.level,
+      })
+    }
+    return Object.values(grouped)
+  })
+  return remote || seedTechStack
+}
+
+export async function getExperiences() {
+  const remote = await trySupabase(async (supabase) => {
+    const { data, error } = await supabase.from('experiences').select('*').order('start_date', { ascending: false })
+    if (error || !data || data.length === 0) return null
+    return data
+  })
+  return remote || seedExperiences
+}
+
+export async function getEducation() {
+  const remote = await trySupabase(async (supabase) => {
+    const { data, error } = await supabase.from('education').select('*').order('start_date', { ascending: false })
+    if (error || !data || data.length === 0) return null
+    return data
+  })
+  return remote || seedEducation
+}
+
+export async function getCertifications() {
+  const remote = await trySupabase(async (supabase) => {
+    const { data, error } = await supabase.from('certifications').select('*').order('issued_date', { ascending: false })
+    if (error || !data || data.length === 0) return null
+    return data
+  })
+  return remote || seedCertifications
+}
+
+export async function getProjects({ featuredOnly = false } = {}) {
+  const remote = await trySupabase(async (supabase) => {
+    let q = supabase.from('projects').select('*').order('created_at', { ascending: false })
+    if (featuredOnly) q = q.eq('featured', true)
+    const { data, error } = await q
+    if (error || !data || data.length === 0) return null
+    return data
+  })
+  const list = remote || seedProjects
+  return featuredOnly ? list.filter((p) => p.featured) : list
+}
+
+    ├── profile.js
+    // Static profile data (fallback / seed). Once the Supabase `profiles` table
+// has a row, the site will prefer that value.
+export const profile = {
+  full_name: 'Achmad Hasanudin',
+  headline: 'Full-Stack Developer',
+  tagline: 'Building clean, fast, and reliable web & mobile experiences.',
+  bio: "Hi, I'm Achmad — a full-stack developer who loves turning ideas into polished, production-ready products. I focus on writing maintainable code, designing thoughtful user experiences, and shipping value quickly. When I'm not coding, I explore new frameworks, contribute to open source, and mentor aspiring developers.",
+  location: 'Indonesia',
+  email: 'hello@achmadhasanudin.com',
+  avatar_url: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjh8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBkZXZlbG9wZXIlMjBoZWFkc2hvdHxlbnwwfHx8fDE3ODUxNTA2Mjd8MA&ixlib=rb-4.1.0&q=85&w=800',
+  resume_url: '/resume-placeholder.pdf',
+  socials: {
+    github: 'https://github.com/achmadhasanudin',
+    linkedin: 'https://linkedin.com/in/achmadhasanudin',
+    email: 'mailto:hello@achmadhasanudin.com',
+  },
+}
+
+    ├── projects.js
+    export const projects = [
+  {
+    id: 'proj-1',
+    title: 'Nimbus Analytics',
+    description:
+      'A real-time SaaS analytics dashboard that helps product teams monitor user engagement and conversion funnels.',
+    thumbnail:
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwZGFzaGJvYXJkfGVufDB8fHx8MTc4NTE1MDYzNnww&ixlib=rb-4.1.0&q=85&w=1200',
+    tech: ['Next.js', 'TypeScript', 'PostgreSQL', 'Tailwind CSS'],
+    github_url: 'https://github.com/achmadhasanudin/nimbus',
+    live_url: 'https://nimbus.example.com',
+    featured: true,
+  },
+  {
+    id: 'proj-2',
+    title: 'Beacon Admin Suite',
+    description:
+      'Modular admin panel with role-based access, audit logs, and drag-and-drop dashboard builder for enterprise clients.',
+    thumbnail:
+      'https://images.unsplash.com/photo-1608222351212-18fe0ec7b13b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwyfHx0ZWNoJTIwZGFzaGJvYXJkfGVufDB8fHx8MTc4NTE1MDYzNnww&ixlib=rb-4.1.0&q=85&w=1200',
+    tech: ['React', 'NestJS', 'PostgreSQL', 'Docker'],
+    github_url: 'https://github.com/achmadhasanudin/beacon',
+    live_url: null,
+    featured: true,
+  },
+  {
+    id: 'proj-3',
+    title: 'Pocket Budget',
+    description:
+      'Cross-platform mobile app for personal finance tracking with automatic categorization and monthly insights.',
+    thumbnail:
+      'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzd8MHwxfHNlYXJjaHwxfHxtb2JpbGUlMjBhcHAlMjBzY3JlZW58ZW58MHx8fHwxNzg1MTUwNjI3fDA&ixlib=rb-4.1.0&q=85&w=1200',
+    tech: ['Flutter', 'Firebase', 'Dart'],
+    github_url: 'https://github.com/achmadhasanudin/pocket-budget',
+    live_url: 'https://pocketbudget.example.com',
+    featured: true,
+  },
+  {
+    id: 'proj-4',
+    title: 'InkPress CMS',
+    description:
+      'Headless content platform for creators and journalists, with markdown editor, media library, and REST + GraphQL APIs.',
+    thumbnail:
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwZGFzaGJvYXJkfGVufDB8fHx8MTc4NTE1MDYzNnww&ixlib=rb-4.1.0&q=85&w=1200',
+    tech: ['Laravel', 'Vue.js', 'MySQL'],
+    github_url: 'https://github.com/achmadhasanudin/inkpress',
+    live_url: null,
+    featured: false,
+  },
+  {
+    id: 'proj-5',
+    title: 'Relay Chat',
+    description:
+      'End-to-end encrypted team chat with channels, threads, and slash-command extensions.',
+    thumbnail:
+      'https://images.unsplash.com/photo-1608222351212-18fe0ec7b13b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwyfHx0ZWNoJTIwZGFzaGJvYXJkfGVufDB8fHx8MTc4NTE1MDYzNnww&ixlib=rb-4.1.0&q=85&w=1200',
+    tech: ['Node.js', 'Socket.IO', 'Redis', 'React'],
+    github_url: 'https://github.com/achmadhasanudin/relay-chat',
+    live_url: null,
+    featured: false,
+  },
+]
+
+    └── skills.js
+    // Grouped tech stack. Icons come from https://cdn.simpleicons.org/<slug>/<hex>
+// Skill levels: 'Advanced' | 'Intermediate' | 'Basic'
+export const techStack = [
+  {
+    category: 'Frontend',
+    items: [
+      { name: 'React', slug: 'react', color: '61DAFB', level: 'Advanced' },
+      { name: 'Next.js', slug: 'nextdotjs', color: '000000', level: 'Advanced' },
+      { name: 'TypeScript', slug: 'typescript', color: '3178C6', level: 'Advanced' },
+      { name: 'Tailwind CSS', slug: 'tailwindcss', color: '06B6D4', level: 'Advanced' },
+      { name: 'JavaScript', slug: 'javascript', color: 'F7DF1E', level: 'Advanced' },
+      { name: 'Vue.js', slug: 'vuedotjs', color: '4FC08D', level: 'Intermediate' },
+    ],
+  },
+  {
+    category: 'Mobile',
+    items: [
+      { name: 'Flutter', slug: 'flutter', color: '02569B', level: 'Intermediate' },
+      { name: 'React Native', slug: 'react', color: '61DAFB', level: 'Intermediate' },
+      { name: 'Kotlin', slug: 'kotlin', color: '7F52FF', level: 'Basic' },
+    ],
+  },
+  {
+    category: 'Backend',
+    items: [
+      { name: 'Node.js', slug: 'nodedotjs', color: '5FA04E', level: 'Advanced' },
+      { name: 'Express', slug: 'express', color: '000000', level: 'Advanced' },
+      { name: 'NestJS', slug: 'nestjs', color: 'E0234E', level: 'Intermediate' },
+      { name: 'Laravel', slug: 'laravel', color: 'FF2D20', level: 'Intermediate' },
+      { name: 'Python', slug: 'python', color: '3776AB', level: 'Intermediate' },
+    ],
+  },
+  {
+    category: 'Database',
+    items: [
+      { name: 'PostgreSQL', slug: 'postgresql', color: '4169E1', level: 'Advanced' },
+      { name: 'MySQL', slug: 'mysql', color: '4479A1', level: 'Advanced' },
+      { name: 'MongoDB', slug: 'mongodb', color: '47A248', level: 'Intermediate' },
+      { name: 'Redis', slug: 'redis', color: 'DC382D', level: 'Intermediate' },
+      { name: 'Supabase', slug: 'supabase', color: '3FCF8E', level: 'Advanced' },
+      { name: 'Firebase', slug: 'firebase', color: 'DD2C00', level: 'Intermediate' },
+    ],
+  },
+  {
+    category: 'Tools',
+    items: [
+      { name: 'Git', slug: 'git', color: 'F05032', level: 'Advanced' },
+      { name: 'GitHub', slug: 'github', color: '181717', level: 'Advanced' },
+      { name: 'Docker', slug: 'docker', color: '2496ED', level: 'Intermediate' },
+      { name: 'Figma', slug: 'figma', color: 'F24E1E', level: 'Intermediate' },
+      { name: 'Postman', slug: 'postman', color: 'FF6C37', level: 'Advanced' },
+      { name: 'Vercel', slug: 'vercel', color: '000000', level: 'Advanced' },
+    ],
+  },
+]
+
+```

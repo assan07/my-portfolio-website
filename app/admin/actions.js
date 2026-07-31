@@ -12,6 +12,70 @@ const ALLOWED_TABLES = new Set([
   'certifications',
   'messages',
 ])
+const ALLOWED_FIELDS = {
+  projects: [
+    'id',
+    'title',
+    'description',
+    'thumbnail',
+    'tech',
+    'github_url',
+    'live_url',
+    'featured',
+  ],
+
+  skills: [
+    'id',
+    'category',
+    'name',
+    'slug',
+    'color',
+    'level',
+    'sort_order',
+  ],
+
+  experiences: [
+    'id',
+    'role',
+    'company',
+    'location',
+    'start_date',
+    'end_date',
+    'description',
+    'highlights',
+  ],
+
+  education: [
+    'id',
+    'degree',
+    'school',
+    'location',
+    'start_date',
+    'end_date',
+    'description',
+  ],
+
+  certifications: [
+    'id',
+    'name',
+    'issuer',
+    'issued_date',
+    'credential_url',
+  ],
+}
+
+function pickAllowedFields(table, payload) {
+  const allowed = ALLOWED_FIELDS[table] || []
+
+  return Object.fromEntries(
+    Object.entries(payload).filter(([key]) => allowed.includes(key))
+  )
+}
+
+function limitString(value, max = 5000) {
+  if (typeof value !== 'string') return value
+  return value.slice(0, max)
+}
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
   .split(',')
@@ -100,10 +164,17 @@ function toArr(v) {
 
 function cleanPayload(obj) {
   const out = {}
+
   for (const [k, v] of Object.entries(obj)) {
     if (v === undefined) continue
-    out[k] = v === '' ? null : v
+
+    if (typeof v === 'string') {
+      out[k] = v === '' ? null : limitString(v)
+    } else {
+      out[k] = v === '' ? null : v
+    }
   }
+
   return out
 }
 
@@ -120,13 +191,27 @@ function logServerError(context, error) {
 }
 
 export async function upsertRow(table, payload, revalidate) {
-
   assertAllowedTable(table)
+
   const { supabase } = await requireAuth()
-  const now = new Date().toISOString()
-  const row = { ...cleanPayload(payload), updated_at: now }
-  if (!row.id) delete row.id
-  const { error } = await supabase.from(table).upsert(row)
+
+  const row = {
+    ...cleanPayload(
+      pickAllowedFields(table, payload)
+    ),
+    updated_at: new Date().toISOString(),
+  }
+
+  if (!row.id) {
+    delete row.id
+  }
+
+  const { error } = await supabase
+    .from(table)
+    .upsert(row, {
+      onConflict: 'id',
+    })
+
   if (error) {
     logServerError(`UPSERT:${table}`, error)
 
@@ -134,9 +219,16 @@ export async function upsertRow(table, payload, revalidate) {
       error: 'Failed to save data.',
     }
   }
-  if (revalidate) revalidatePath(revalidate)
+
+  if (revalidate) {
+    revalidatePath(revalidate)
+  }
+
   revalidatePath('/', 'layout')
-  return { success: true }
+
+  return {
+    success: true,
+  }
 }
 
 export async function deleteRow(table, id, revalidate) {

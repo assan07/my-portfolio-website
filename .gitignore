@@ -68,3 +68,8 @@ venv/
 *credentials.json*
 *token.json*
 *.pem
+
+
+# Test Files
+docs/
+tests/
