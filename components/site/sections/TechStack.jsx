@@ -5,12 +5,10 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 const levelStyles = {
-  Advanced:
-    'bg-primary/10 text-primary border-primary/20 dark:bg-primary/20',
+  Advanced: 'bg-primary/10 text-primary border-primary/20 dark:bg-primary/20',
   Intermediate:
     'bg-secondary/15 text-secondary-foreground border-secondary/30 dark:bg-secondary/20 dark:text-secondary',
-  Basic:
-    'bg-muted text-muted-foreground border-border',
+  Basic: 'bg-muted text-muted-foreground border-border',
 }
 
 export function TechStack({ groups }) {
@@ -28,8 +26,11 @@ export function TechStack({ groups }) {
             <div className="flex items-center gap-3 mb-4">
               <h3 className="text-lg font-semibold">{group.category}</h3>
               <div className="h-px flex-1 bg-border" />
-              <span className="text-xs text-muted-foreground">{group.items.length} technologies</span>
+              <span className="text-xs text-muted-foreground">
+                {group.items.length} technologies
+              </span>
             </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {group.items.map((item) => (
                 <div
@@ -38,7 +39,9 @@ export function TechStack({ groups }) {
                 >
                   <div className="h-12 w-12 flex items-center justify-center">
                     <Image
-                      src={`https://cdn.simpleicons.org/${item.slug}/${item.color}`}
+                      src={
+                        item.custom_icon || `https://cdn.simpleicons.org/${item.slug}/${item.color}`
+                      }
                       alt={item.name}
                       width={40}
                       height={40}
@@ -51,7 +54,10 @@ export function TechStack({ groups }) {
                   </div>
                   <Badge
                     variant="outline"
-                    className={cn('text-[10px] font-medium rounded-full border', levelStyles[item.level])}
+                    className={cn(
+                      'text-[10px] font-medium rounded-full border',
+                      levelStyles[item.level]
+                    )}
                   >
                     {item.level}
                   </Badge>

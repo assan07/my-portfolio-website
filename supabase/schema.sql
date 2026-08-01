@@ -286,3 +286,30 @@ VALUES
 ('certificate-images', 'certificate-images', true)
 ON CONFLICT (id) DO NOTHING;
 
+
+-- add bucket custom icons
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('custom-icons', 'custom-icons', true)
+ON CONFLICT (id) DO NOTHING;
+
+do $$ begin
+  create policy "auth upload custom-icons"
+  on storage.objects
+  for insert
+  to authenticated
+  with check (bucket_id = 'custom-icons');
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create policy "auth manage custom-icons"
+  on storage.objects
+  for all
+  to authenticated
+  using (bucket_id = 'custom-icons')
+  with check (bucket_id = 'custom-icons');
+exception
+  when duplicate_object then null;
+end $$;
+

@@ -32,6 +32,7 @@ const ALLOWED_FIELDS = {
     'color',
     'level',
     'sort_order',
+    'custom_icon'
   ],
 
   experiences: [
@@ -312,9 +313,11 @@ export async function saveSkill(_prev, formData) {
     name: formData.get('name'),
     slug: formData.get('slug'),
     color: formData.get('color') || '000000',
+    custom_icon: formData.get('custom_icon') || null,
     level: formData.get('level'),
     sort_order: toNumOrNull(formData.get('sort_order')) ?? 0,
   }
+
   return upsertRow('skills', payload, '/admin/skills')
 }
 
