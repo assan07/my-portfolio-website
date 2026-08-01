@@ -3,7 +3,17 @@ import { getProjects } from '@/lib/data'
 
 export const metadata = {
   title: 'Projects',
-  description: 'Selected work by Achmad Hasanudin — web, mobile, and backend projects.',
+
+  description:
+    'Explore software projects built by Achmad Hasanudin using Next.js, React, Flutter, JavaScript, and modern web technologies.',
+
+  alternates: {
+    canonical: '/projects',
+  },
+
+  openGraph: {
+    url: '/projects',
+  },
 }
 
 async function ProjectsPage() {

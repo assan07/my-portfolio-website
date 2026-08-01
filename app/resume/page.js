@@ -13,7 +13,17 @@ import { dateRange, formatMonthYear } from '@/lib/utils/format'
 
 export const metadata = {
   title: 'Resume',
-  description: 'Professional resume of Achmad Hasanudin — experience, education, skills, and certifications.',
+
+  description:
+    'View the resume of Achmad Hasanudin, including education, technical skills, certifications, and professional experience.',
+
+  alternates: {
+    canonical: '/resume',
+  },
+
+  openGraph: {
+    url: '/resume',
+  },
 }
 
 async function ResumePage() {

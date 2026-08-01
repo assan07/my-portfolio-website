@@ -57,9 +57,9 @@ export const metadata = {
   },
 
   icons: {
-    icon: '/icon.png',
-    shortcut: '/favicon.ico',
-    apple: '/apple-icon.png',
+    icon: 'icons/icon.png',
+    shortcut: 'icons/favicon.ico',
+    apple: 'icons/apple-icon.png',
   },
 
   robots: {
@@ -80,14 +80,26 @@ export const metadata = {
     locale: 'en_US',
 
     type: 'website',
+
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'Achmad Hasanudin Portfolio',
+      },
+    ],
   },
 
   twitter: {
     card: 'summary_large_image',
+
     title: 'Achmad Hasanudin — Front-Stack Developer',
 
     description:
       'Personal branding website of Achmad Hasanudin — a front-stack developer building fast, accessible, and scalable web & mobile applications.',
+
+    images: ['/opengraph-image'],
   },
 }
 function RootLayout({ children }) {

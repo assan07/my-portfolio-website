@@ -4,7 +4,17 @@ import { getProfile } from '@/lib/data'
 
 export const metadata = {
   title: 'Contact',
-  description: 'Get in touch with Achmad Hasanudin.',
+
+  description:
+    'Get in touch with Achmad Hasanudin for collaboration, freelance projects, internships, or professional opportunities.',
+
+  alternates: {
+    canonical: '/contact',
+  },
+
+  openGraph: {
+    url: '/contact',
+  },
 }
 
 async function ContactPage() {
