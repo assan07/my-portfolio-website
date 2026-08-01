@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 const IMAGE_MAX_SIZE = 5 * 1024 * 1024 // 5 MB
 const FILE_MAX_SIZE = 10 * 1024 * 1024 // 10 MB
 
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']
 
 const ALLOWED_FILE_TYPES = ['application/pdf']
 
@@ -117,7 +117,7 @@ export function FileUpload({
     if (!allowedTypes.includes(rawFile.type)) {
       toast.error(
         kind === 'image'
-          ? 'Only JPG, PNG, and WebP images are allowed.'
+          ? 'Only JPG, PNG, WebP, and SVG images are allowed.'
           : 'Only PDF files are allowed.'
       )
       return

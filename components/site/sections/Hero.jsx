@@ -106,9 +106,10 @@ export function Hero({ profile }) {
                   src={profile.avatar_url}
                   alt={profile.full_name}
                   fill
-                  sizes="(max-width: 768px) 288px, 384px"
-                  className="object-cover"
                   priority
+                  quality={90}
+                  sizes="(max-width:768px) 288px, 384px"
+                  className="object-cover"
                 />
               </div>
               <div className="absolute -bottom-4 -left-4 rounded-2xl border border-border bg-card px-4 py-3 shadow-card">

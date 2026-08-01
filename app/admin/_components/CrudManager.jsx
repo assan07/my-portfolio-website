@@ -189,7 +189,7 @@ export function CrudManager({
                     name={f.name}
                     defaultValue={displayVal}
                     placeholder={f.placeholder}
-                    type={f.type === 'url' ? 'url' : 'text'}
+                    type={f.type || 'text'}
                   />
                   {f.hint && <p className="text-xs text-muted-foreground">{f.hint}</p>}
                 </div>
