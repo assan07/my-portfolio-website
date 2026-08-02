@@ -103,8 +103,8 @@ export function Hero({ profile }) {
               <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-primary/25 to-secondary/25 blur-2xl" />
               <div className="relative h-full w-full overflow-hidden rounded-[2rem] border border-border shadow-card bg-card">
                 <Image
-                  src={profile.avatar_url}
-                  alt={profile.full_name}
+                  src={profile.avatar_url || '/app/icons/master.ico'}
+                  alt={`Portrait of ${profile.full_name}`}
                   fill
                   priority
                   quality={90}

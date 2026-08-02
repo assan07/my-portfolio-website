@@ -1,5 +1,4 @@
 -- Supabase schema for Achmad Hasanudin personal branding site.
--- Run this once in Supabase SQL Editor.
 
 create extension if not exists "pgcrypto";
 

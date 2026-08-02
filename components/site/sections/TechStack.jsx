@@ -4,12 +4,14 @@ import { SectionHeading } from '../SectionHeading'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
+
 const levelStyles = {
   Advanced: 'bg-primary/10 text-primary border-primary/20 dark:bg-primary/20',
   Intermediate:
     'bg-secondary/15 text-secondary-foreground border-secondary/30 dark:bg-secondary/20 dark:text-secondary',
   Basic: 'bg-muted text-muted-foreground border-border',
 }
+
 
 export function TechStack({ groups }) {
   return (

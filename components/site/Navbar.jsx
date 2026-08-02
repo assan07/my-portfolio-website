@@ -32,22 +32,20 @@ export function Navbar() {
     <header
       className={cn(
         'sticky top-0 z-40 w-full border-b border-transparent transition-all',
-        scrolled
-          ? 'border-border/60 bg-background/80 glass shadow-soft'
-          : 'bg-background/60'
+        scrolled ? 'border-border/60 bg-background/80 glass shadow-soft' : 'bg-background/60'
       )}
     >
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
-            A
+            L
           </span>
-          <span className="font-semibold tracking-tight">Achmad Hasanudin</span>
+          <span className="font-semibold tracking-tight">Lolly Genda Aprilia</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
           {navItems.map((item) => {
-            const active = pathname === item.href
+            const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
             return (
               <Link
                 key={item.href}
@@ -68,7 +66,7 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-2">
           <ThemeToggle />
           <Button asChild size="sm" className="rounded-full">
-            <Link href="/contact">Let&apos;s talk</Link>
+            <Link href="/contact">Contact Me</Link>
           </Button>
         </div>
 
@@ -89,7 +87,7 @@ export function Navbar() {
         <div className="md:hidden border-t border-border/60 bg-background">
           <div className="container py-3 flex flex-col gap-1">
             {navItems.map((item) => {
-              const active = pathname === item.href
+              const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
               return (
                 <Link
                   key={item.href}
@@ -97,9 +95,7 @@ export function Navbar() {
                   onClick={() => setOpen(false)}
                   className={cn(
                     'px-3 py-2 rounded-md text-sm',
-                    active
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-foreground/80 hover:bg-muted'
+                    active ? 'bg-primary/10 text-primary' : 'text-foreground/80 hover:bg-muted'
                   )}
                 >
                   {item.label}
@@ -107,7 +103,9 @@ export function Navbar() {
               )
             })}
             <Button asChild size="sm" className="mt-2 rounded-full">
-              <Link href="/contact" onClick={() => setOpen(false)}>Let&apos;s talk</Link>
+              <Link href="/contact" onClick={() => setOpen(false)}>
+                Let&apos;s talk
+              </Link>
             </Button>
           </div>
         </div>

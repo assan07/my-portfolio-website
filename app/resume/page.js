@@ -51,8 +51,13 @@ async function ResumePage() {
           </div>
         </div>
         <Button asChild size="lg" className="rounded-full">
-          <a href={profile.resume_url} download>
-            <Download className="mr-1 h-4 w-4" /> Download PDF
+          <a
+            href={profile.resume_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Download className="mr-1 h-4 w-4" />
+            Download PDF
           </a>
         </Button>
       </div>

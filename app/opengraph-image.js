@@ -8,6 +8,10 @@ export const size = {
   width: 1200,
   height: 630,
 }
+const website =
+  process.env.NEXT_PUBLIC_BASE_URL
+    ?.replace(/^https?:\/\//, '')
+  ?? 'lollygendaaprilia.com'
 
 export const contentType = 'image/png'
 
@@ -79,7 +83,7 @@ export default function OpenGraphImage() {
             color: '#38bdf8',
           }}
         >
-          achmadhasanudin.com
+          {website}
         </div>
       </div>
     ),

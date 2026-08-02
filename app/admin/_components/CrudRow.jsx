@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge'
 import { formatMonthYear } from '@/lib/utils/format'
 import { dateRange } from '@/lib/utils/format'
+import {Image} from 'next/image'
 
 export function CrudRow({ table, row }) {
   switch (table) {
@@ -40,16 +41,36 @@ export function CrudRow({ table, row }) {
 
     case 'skills':
       return (
-        <div>
-          <div className="font-medium">
-            {row.name} <span className="text-muted-foreground font-normal">· {row.category}</span>
-          </div>
-          <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-            <Badge variant="outline" className="rounded-full text-[10px]">
-              {row.level}
-            </Badge>
-            <span>slug: {row.slug}</span>
-            <span>#{row.color}</span>
+        <div className="flex items-center gap-3">
+          {console.log(row.custom_icon)}
+          {row.custom_icon ? (
+            <Image
+              src={row.custom_icon}
+              alt={row.name}
+              className="h-10 w-10 rounded-md border bg-background object-contain p-1"
+              width={40}
+              height={40}
+            />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-md border bg-muted text-xs font-semibold text-muted-foreground">
+              {row.name?.charAt(0).toUpperCase()}
+            </div>
+          )}
+
+          <div>
+            <div className="font-medium">
+              {row.name} <span className="font-normal text-muted-foreground">· {row.category}</span>
+            </div>
+
+            <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+              <Badge variant="outline" className="rounded-full text-[10px]">
+                {row.level}
+              </Badge>
+
+              <span>slug: {row.slug}</span>
+
+              <span>#{row.color}</span>
+            </div>
           </div>
         </div>
       )
