@@ -11,7 +11,7 @@ export const size = {
 const website =
   process.env.NEXT_PUBLIC_BASE_URL
     ?.replace(/^https?:\/\//, '')
-  ?? 'lollygendaaprilia.com'
+  ?? 'achmadhasanudin.com'
 
 export const contentType = 'image/png'
 
